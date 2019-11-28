@@ -30,7 +30,7 @@ Game.combination = function(combination1, combination2, result) {
 }
 
 Game.setTimer = function() {
-    game.setTimer("10", "1", "초")
+    game.setTimer("7", "1", "초")
 }
 
 Game.hideTimer = function() {
@@ -248,63 +248,73 @@ function Box(room, name, closedImage, openedImage){
  })
 
 
- //////// Back Definition
-function Back(room, name, image, connectedTo){
+
+ //////// Go Definition
+function Go(room, name, image, connectedTo){
 	Object.call(this, room, name, image)
 
-    // Back properties
+    // Go properties
 	this.connectedTo = connectedTo
 }
 
 // inherited from Object
-Back.prototype = new Object()
+Go.prototype = new Object()
 
-Back.member('onClick', function(){
+Go.member('onClick', function(){
 	Game.move(this.connectedTo)
 })
 
-/*
+
+
+
+//////// MsgObj Definition
+function MsgObj(room, name, image, message){
+    Object.call(this, room, name, image)
+ 
+    // MsgObj properties
+    this.message = message }
+ // inherited from Object
+ MsgObj.prototype = new Object()
+ 
+ MsgObj.member('onClick', function() {
+    printMessage(this.message)
+ })
+
+
+
 //////// Soldier Definition
-function Soldier(room, name, closedImage, openedImage, count){
-	Object.call(this, room, name, closedImage)
+function Soldier(room, name, image, deadImage, count){
+	Object.call(this, room, name, image)
 
     // Door properties
-	this.closedImage = closedImage
-	this.openedImage = openedImage
+	this.deadImage = deadImage
 	this.count = count
 }
 
 // inherited from Object
-Solider.prototype = new Object()
+Soldier.prototype = new Object()
 
-Soldier.member('onClick', function(){  // 어차피 오버라이딩함
-    // if (Game.handItem() == room1.gun) {  // 앞방에 총 만들어 달라고 부탁,,
+Soldier.member('onClick', function(){  // isHanded 추가
     playSound("gun.wav")
-    if(this.count < 2) {
+	if (this.id.isClosed() && this.count < 2){
         this.count += 1
         printMessage("누군가가 총에 맞았다!")
-    } else if (this.count == 2) {
-        this.id.open()
-        tunnel_nv.kill += 1
-    } else {
+	} else if (this.id.isClosed() && this.count == 2){
+		this.id.open()
+	} else {
         printMessage("군인이 죽어 있다.")
     }
-//} else {
-//     printMessage("군인들을 처치하고 앞으로 나아가자!")
-//}
-    
 })
 
 Soldier.member('onOpen', function(){  // 죽음
+    this.id.setSprite(this.deadImage)
+    kill += 1
     printMessage("군인이 죽었다!")
-    this.id.setSprite(this.opnedImage)
-    this.id.locateObject(this.id, this.id.getX(), this.id.getY()+120)  // y좌표 +120
+    this.room.id.locateObject(this.id, this.id.getX(), this.id.getY()+120)
 })
 
-Soldier.member('onClose', function(){
-	this.id.setSprite(this.closedImage)
-})
-*/
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -318,37 +328,38 @@ kindergarten = new Room("kindergarten", "bg_kindergarten.png")
 
 /************************* 터널_깜깜 *************************/
 
-/*
-tunnel_dark.soldier = new Soldier(tunnel_dark, "soldier", "soldier1.png", "soldier1.png", 0)
-tunnel_dark.soldier.resize(200)
-tunnel_dark.soldier.locate(750, 350)
+// soldier
+
+tunnel_dark.soldier = new Soldier(tunnel_dark, "soldier", "soldier1.png", "soldier1_dead.png", 0)
+tunnel_dark.soldier.resize(130)
+tunnel_dark.soldier.locate(750, 300)
 tunnel_dark.soldier.onClick = function() {
-       // if (game.getHandItem() == room1.gun) {  // 앞방에 총 만들어 달라고 부탁,,
-       playSound("gun.wav")
-       if(this.count < 2) {
-           this.count += 1
-           printMessage("누군가가 총에 맞았다!")
-           soldierX = Math.floor(Math.random() * 600 + 300)
-           soldierY = Math.floor(Math.random() * 200 + 100)
-           this.id.locate(soldierX, soldierY)
-       } else if (this.count == 2) {
-           printMessage("군인이 죽었다!")
-           this.id.hide()
-           tunnel_dark.nvGoggles.show()
-           Game.hideTimer()
-       } else {
-           printMessage("군인이 죽었다!")
-       }
-  // } else {
-  //     printMessage("누군가 가로막고 있는 것 같다.")
-  // }
-}
-*/
+    // if (game.getHandItem() == room1.gun) {  // 앞방에 총 만들어 달라고 부탁,,
+         playSound("gun.wav")
+         if(this.count < 2) {
+             this.count += 1
+             printMessage("누군가가 총에 맞았다!")
+             soldierX = Math.floor(Math.random() * 600 + 300)
+             soldierY = Math.floor(Math.random() * 200 + 100)
+             tunnel_dark.locateObject(this.id, soldierX, soldierY)
+         } else if (this.count == 2) {
+             printMessage("군인이 죽었다!")
+             this.id.hide()
+             tunnel_dark.nvGoggles.show()
+         } else {
+             printMessage("군인이 죽었다!")
+         }
+    // } else {
+    //     printMessage("누군가 가로막고 있는 것 같다.")
+    // }
+ }
+
+
 
 tunnel_dark.nvGoggles = new Object(tunnel_dark, "nvGoggles", "nightVisionGoggles.png")
 tunnel_dark.nvGoggles.resize(80)
 tunnel_dark.nvGoggles.locate(600, 500)
-//tunnel_dark.nvGoggles.hide()
+tunnel_dark.nvGoggles.hide()
 tunnel_dark.nvGoggles.onClick = function() {
     Game.move(tunnel_nv)
     printMessage("이제야 앞이 보이네..")
@@ -359,13 +370,13 @@ tunnel_dark.nvGoggles.onClick = function() {
 
 /************************* 터널_야시경 착용 *************************/
 
-tunnel_nv.kill = 0
+var kill = 0
 
-tunnel_nv.toDoor = new Back(tunnel_nv, "toDoor", "door_closed_green.png", tunnel_door)
+tunnel_nv.toDoor = new Go(tunnel_nv, "toDoor", "door_closed_green.png", tunnel_door)
 tunnel_nv.toDoor.resize(40)
 tunnel_nv.toDoor.locate(650, 285)
 tunnel_nv.toDoor.onClick = function() {
-    if(tunnel_nv.kill == 1) {  // 군인 8명 죽였으면
+    if(kill == 8) {  // 군인 8명 죽였으면
         Game.move(this.connectedTo)
         Game.hideTimer()
     } else {  // 덜 죽였으면
@@ -373,29 +384,41 @@ tunnel_nv.toDoor.onClick = function() {
     }
 }
 
-/*
-tunnel_nv.soldier1 = new Soldier(tunnel_nv, soldier1, "soldier3.png", "soldier3_dead.png", 0)
+tunnel_nv.soldier1 = new Soldier(tunnel_nv, "soldier1", "soldier1.png", "soldier1_dead.png", 0)
 tunnel_nv.soldier1.resize(130)
-tunnel_nv.soldier1.locate(750, 350)
-//tunnel_nv.soldier.count = 0  // 나중에 객체화하기
-tunnel_nv.soldier.onClick = function() {
-   // if (Game.handItem() == room1.gun) {  // 앞방에 총 만들어 달라고 부탁,,
-        playSound("gun.wav")
-        if(this.count < 2) {
-            this.count += 1
-            printMessage("누군가가 총에 맞았다!")
-        } else if (this.count == 2) {
-            this.id.open()
-            tunnel_nv.kill += 1
-        } else {
-            printMessage("군인이 죽어 있다.")
-        }
-   // } else {
-   //     printMessage("군인들을 처치하고 앞으로 나아가자!")
-   // }
-}*/
+tunnel_nv.soldier1.locate(750, 300)
 
-tunnel_nv.back = new Back(tunnel_nv, "back", "back.png", tunnel_dark)  // 합치고 감옥으로 수정
+tunnel_nv.soldier2 = new Soldier(tunnel_nv, "soldier2", "soldier2.png", "soldier2_dead.png", 0)
+tunnel_nv.soldier2.resize(165)
+tunnel_nv.soldier2.locate(450, 350)
+
+tunnel_nv.soldier3 = new Soldier(tunnel_nv, "soldier3", "soldier3.png", "soldier3_dead.png", 0)
+tunnel_nv.soldier3.resize(130)
+tunnel_nv.soldier3.locate(550, 380)
+
+tunnel_nv.soldier4 = new Soldier(tunnel_nv, "soldier4", "soldier4.png", "soldier4_dead.png", 0)
+tunnel_nv.soldier4.resize(165)
+tunnel_nv.soldier4.locate(850, 320)
+
+tunnel_nv.soldier5 = new Soldier(tunnel_nv, "soldier5", "soldier1.png", "soldier1_dead.png", 0)
+tunnel_nv.soldier5.resize(130)
+tunnel_nv.soldier5.locate(1000, 400)
+
+tunnel_nv.soldier6 = new Soldier(tunnel_nv, "soldier6", "soldier2.png", "soldier2_dead.png", 0)
+tunnel_nv.soldier6.resize(165)
+tunnel_nv.soldier6.locate(700, 450)
+
+tunnel_nv.soldier7 = new Soldier(tunnel_nv, "soldier7", "soldier3.png", "soldier3_dead.png", 0)
+tunnel_nv.soldier7.resize(130)
+tunnel_nv.soldier7.locate(300, 430)
+
+tunnel_nv.soldier8 = new Soldier(tunnel_nv, "soldier8", "soldier4.png", "soldier4_dead.png", 0)
+tunnel_nv.soldier8.resize(165)
+tunnel_nv.soldier8.locate(950, 460)
+
+
+
+tunnel_nv.back = new Go(tunnel_nv, "back", "back.png", tunnel_dark)  // 합치고 감옥으로 수정
 tunnel_nv.back.resize(80)
 tunnel_nv.back.locate(100, 650)
 
@@ -440,7 +463,7 @@ tunnel_door.minsu.onClick = function() {
 	}
 }
 
-tunnel_door.back = new Back(tunnel_door, "back", "back.png", tunnel_nv)
+tunnel_door.back = new Go(tunnel_door, "back", "back.png", tunnel_nv)
 tunnel_door.back.resize(80)
 tunnel_door.back.locate(100, 650)
 
@@ -460,7 +483,7 @@ kindergarten.door2.onUnlock = function() {
     kindergarten.door2.setSprite("door_right_open.png")
 }
 kindergarten.door2.video = 0  // 최초 1회만 비디오 실행
-kindergarten.door2.onClick = function() {  // 분기 안 됨
+kindergarten.door2.onClick = function() {
     if (this.id.isOpened() && kindergarten.door2.video == 0) {
         //game.move(다음방)
         //showVideoPlayer("비디오.mp4")
@@ -474,19 +497,13 @@ kindergarten.door2.onClick = function() {  // 분기 안 됨
     }
 }
 
-kindergarten.board = new Object(kindergarten, "board", "whiteBoard_bong.jpg")
+kindergarten.board = new MsgObj(kindergarten, "board", "whiteBoard_bong.jpg", "이상한 낙서가...")
 kindergarten.board.resize(300)
 kindergarten.board.locate(850, 330)
-kindergarten.board.onClick = function() {
-    printMessage("이상한 낙서가...")
-}
 
-kindergarten.frame = new Object(kindergarten, "frame", "frame.png")
+kindergarten.frame = new MsgObj(kindergarten, "frame", "frame.png", "북극곰 사진이다.")
 kindergarten.frame.resize(100)
 kindergarten.frame.locate(430, 220)
-kindergarten.frame.onClick = function() {
-    printMessage("북극곰 사진이다.")
-}
 
 kindergarten.box1 = new Box(kindergarten, "box1", "4-cover-Box(Closed)-sw.png", "4-cover-Box(Opened)-sw.png")
 kindergarten.box1.resize(100)
@@ -538,25 +555,25 @@ kindergarten.bookcase.lock()
 kindergarten.bookcase.move = 0
 kindergarten.bookcase.onUnlock = function() {
     if (kindergarten.bookcase.move == 0) {
-        kindergarten.bookcase.moveX(50)
-        kindergarten.dog.moveX(50)
-        kindergarten.indian.moveX(50)
-        kindergarten.bow.moveX(50)
-        kindergarten.okja.moveX(50)
-        kindergarten.train.moveX(50)
-        kindergarten.remoteNoBattery.moveX(50)
-        kindergarten.mars.moveX(50)
-        kindergarten.reed.moveX(50)
+        this.id.moveX(50)
+        kindergarten.dog.id.moveX(50)
+        kindergarten.indian.id.moveX(50)
+        kindergarten.bow.id.moveX(50)
+        kindergarten.okja.id.moveX(50)
+        kindergarten.train.id.moveX(50)
+        kindergarten.remoteNoBattery.id.moveX(50)
+        kindergarten.mars.id.moveX(50)
+        kindergarten.reed.id.moveX(50)
         kindergarten.bookcase.move = 1
-        kindergarten.box1.show()
-        kindergarten.keypad1.show()
+        kindergarten.box1.id.show()
+        kindergarten.keypad1.id.show()
     }
 }
 kindergarten.bookcase.onClick = function() {  // 열쇠로 해도 안 움직임
     if (this.id.isLocked()) {
         printMessage("장식장을 자세히 살펴보니 뒤에 작은 공간과 열쇠구멍이 있다.")
     }
-    if (Game.handItem() == kindergarten.key && kindergarten.bookcase.move == 0) {
+    if (kindergarten.key.isHanded() && kindergarten.bookcase.move == 0) {
         this.id.unlock()
         printMessage("열쇠로 여니 자동으로 장식장이 움직인다.")
     } else if (kindergarten.bookcase.move == 1) {
@@ -564,54 +581,33 @@ kindergarten.bookcase.onClick = function() {  // 열쇠로 해도 안 움직임
     }
 }
 
-kindergarten.dog = new Object(kindergarten, "dog", "dog.png")
+kindergarten.dog = new MsgObj(kindergarten, "dog", "dog.png", "강아지를 보면 파트라슈가 떠올라. 그 동화 제목이 뭐더라?")
 kindergarten.dog.resize(50)
 kindergarten.dog.locate(280, 370)
-kindergarten.dog.onClick = function() {
-    printMessage("강아지를 보면 파트라슈가 떠올라. 그 동화 제목이 뭐더라?")
-}
 
-kindergarten.indian = new Object(kindergarten, "indian", "indian.png")
+kindergarten.indian = new MsgObj(kindergarten, "indian", "indian.png", "인디언 인형이다.")
 kindergarten.indian.resize(50)
 kindergarten.indian.locate(380, 360)
-kindergarten.indian.onClick = function() {
-    printMessage("인디언 인형이다.")
-}
 
-kindergarten.bow = new Object(kindergarten, "bow", "bow.png")
+kindergarten.bow = new MsgObj(kindergarten, "bow", "bow.png", "장난감 양궁활이다")
 kindergarten.bow.resize(40)
 kindergarten.bow.locate(480, 363)
-kindergarten.bow.onClick = function() {
-    printMessage("장난감 양궁활이다.")
-}
 
-kindergarten.okja = new Object(kindergarten, "okja", "okja.png")
+kindergarten.okja = new MsgObj(kindergarten, "okja", "okja.png", "돼지 같기도 하고 하마 같기도 한데...")
 kindergarten.okja.resize(70)
 kindergarten.okja.locate(575, 373)
-kindergarten.okja.onClick = function() {
-    printMessage("하마 같기도 하고 돼지 같기도 한데...")
-}
 
-kindergarten.train = new Object(kindergarten, "train", "train.png")
+kindergarten.train = new MsgObj(kindergarten, "train", "train.png", "우리 열차랑 비슷하게 생겼네.")
 kindergarten.train.resize(70)
 kindergarten.train.locate(285, 475)
-kindergarten.train.onClick = function() {
-    printMessage("우리 열차랑 비슷하게 생겼네.")
-}
 
-kindergarten.mars = new Object(kindergarten, "mars", "mars.png")
+kindergarten.mars = new MsgObj(kindergarten, "mars", "mars.png", "화성 모형이다.")
 kindergarten.mars.resize(50)
 kindergarten.mars.locate(380, 460)
-kindergarten.mars.onClick = function() {
-    printMessage("화성 모형이다.")
-}
 
-kindergarten.reed = new Object(kindergarten, "reed", "reed.png")
+kindergarten.reed = new MsgObj(kindergarten, "reed", "reed.png", "갈대가 어떻게 여기서 자라지?")
 kindergarten.reed.resize(50)
 kindergarten.reed.locate(580, 460)
-kindergarten.reed.onClick = function() {
-    printMessage("갈대가 어떻게 여기서 자라지?")
-}
 
 kindergarten.box2 = new Box(kindergarten, "box2", "Box(Closed)-se.png", "Box(Opened)-se.png")
 kindergarten.box2.resize(110)
@@ -662,8 +658,8 @@ Game.combination(kindergarten.remoteNoBattery, kindergarten.battery, kindergarte
 kindergarten.tv = new Object(kindergarten, "tv", "tv.png")
 kindergarten.tv.resize(200)
 kindergarten.tv.locate(1050, 170)
-kindergarten.tv.onClick = function() {  // 안 켜짐;;
-    if(Game.handItem() == kindergarten.remote) {
+kindergarten.tv.onClick = function() {
+    if(kindergarten.remote.isHanded()) {
         showVideoPlayer("kindergarten.mp4")
     } else {
         printMessage("리모컨으로 켜볼까?")
@@ -713,12 +709,9 @@ kindergarten.minsu.onClick = function() {
 	}
 }
 
-kindergarten.lecturedesk = new Object(kindergarten, "lecturedesk", "lectureDesk.png")
+kindergarten.lecturedesk = new MsgObj(kindergarten, "lecturedesk", "lectureDesk.png", "윌포드 산업 로고가 새겨진 교탁이다.")
 kindergarten.lecturedesk.resize(200)
 kindergarten.lecturedesk.locate(1000, 550)
-kindergarten.lecturedesk.onClick = function() {
-    printMessage("윌포드 산업 로고가 새겨진 교탁이다.")
-}
 
 kindergarten.note = new Object(kindergarten, "note", "note.png")
 kindergarten.note.resize(60)
@@ -749,12 +742,9 @@ kindergarten.desk1.onDrag = function(direction) {
     }
 }
 
-kindergarten.desk2 = new Object(kindergarten, "desk2", "desk.png")
+kindergarten.desk2 = new MsgObj(kindergarten, "desk2", "desk.png","윌포드 산업 로고가 새겨진 책상이다.")
 kindergarten.desk2.resize(180)
 kindergarten.desk2.locate(750, 600)
-kindergarten.desk2.onClick = function() {
-    printMessage("윌포드 산업 로고가 새겨진 책상이다.")
-}
 
 kindergarten.child = new Object(kindergarten, "child", "child1.png")
 kindergarten.child.resize(100)
@@ -779,7 +769,5 @@ Game.start(tunnel_dark)
 //Game.start(tunnel_nv)
 //Game.start(tunnel_door)
 //Game.start(kindergarten)
-
-//game.printStory("djwfjksjfo")
 
 Game.setGameoverMessage()
